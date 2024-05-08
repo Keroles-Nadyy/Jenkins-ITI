@@ -1,0 +1,27 @@
+FROM ubuntu
+
+USER root
+RUN mkdir jenkins
+
+RUN apt-get update -qq
+RUN apt-get install -qq -y openjdk-11-jdk openssh-server apt-transport-https ca-certificates curl gnupg2 software-properties-common
+RUN apt-get install git -y
+
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+RUN apt-get update -qq && apt-get install -qq -y docker-ce
+
+# Verify the Docker installation
+RUN docker --version
+
+RUN mkdir -p /root/.ssh && \
+    ssh-keygen -t rsa -b 4096 -m PEM -f /root/.ssh/id_rsa -N ''
+
+RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
+
+RUN mkdir -p /var/run/sshd
+# WORKDIR /jenkins
+
+# to start ssh service and to keep the container running indefinitely.
+CMD ["/bin/bash", "-c", "/usr/sbin/sshd -D && tail -f /dev/null"]
+# CMD ["/usr/sbin/sshd", "-D"]
